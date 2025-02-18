@@ -39,7 +39,7 @@ enum JxlCompressionOption {
 enum JxlDecodingPixelFormat {
     optimal = 1,
     r8 = 2,
-    float16 = 3
+    r16 = 3
 };
 
 enum JxlEncodingPixelFormat {

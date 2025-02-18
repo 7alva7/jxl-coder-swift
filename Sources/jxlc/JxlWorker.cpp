@@ -68,8 +68,8 @@ bool DecodeJpegXlOneShot(const uint8_t *jxl, size_t size,
     if (pixelFormat == optimal) {
         format = {4, JXL_TYPE_UINT8, JXL_NATIVE_ENDIAN, 0};
     } else {
-        if (pixelFormat == float16) {
-            format = {4, JXL_TYPE_FLOAT16, JXL_NATIVE_ENDIAN, 0};
+        if (pixelFormat == r16) {
+            format = {4, JXL_TYPE_UINT16, JXL_NATIVE_ENDIAN, 0};
         } else if (pixelFormat == r8) {
             format = {4, JXL_TYPE_UINT8, JXL_NATIVE_ENDIAN, 0};
         }
@@ -105,11 +105,11 @@ bool DecodeJpegXlOneShot(const uint8_t *jxl, size_t size,
             if (bitDepth > 8 && pixelFormat == optimal) {
                 *useFloats = true;
                 hdrImage = true;
-                format = { static_cast<uint32_t>(baseComponents), JXL_TYPE_FLOAT16, JXL_NATIVE_ENDIAN, 0 };
-            } else if (pixelFormat == float16) {
+                format = { static_cast<uint32_t>(baseComponents), JXL_TYPE_UINT16, JXL_NATIVE_ENDIAN, 0 };
+            } else if (pixelFormat == r16) {
                 *useFloats = true;
                 hdrImage = true;
-                format = { static_cast<uint32_t>(baseComponents), JXL_TYPE_FLOAT16, JXL_NATIVE_ENDIAN, 0 };
+                format = { static_cast<uint32_t>(baseComponents), JXL_TYPE_UINT16, JXL_NATIVE_ENDIAN, 0 };
             } else {
                 if (pixelFormat == r8) {
                     *depth = 8;

@@ -56,7 +56,7 @@ typedef NS_ENUM(NSInteger, JXLCompressionOption) {
 typedef NS_ENUM(NSInteger, JXLPreferredPixelFormat) {
     kOptimal NS_SWIFT_NAME(optimal),
     kR8 NS_SWIFT_NAME(r8),
-    kFloat16 NS_SWIFT_NAME(float16),
+    kR16 NS_SWIFT_NAME(r16),
 };
 
 typedef NS_ENUM(NSInteger, JXLEncoderDecodingSpeed)  {

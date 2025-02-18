@@ -235,7 +235,7 @@ static inline float JXLGetDistance(const int quality)
 
         std::vector<uint8_t> iccProfile;
         size_t xSize, ySize;
-        bool useFloats;
+        bool use16BitImage;
         int depth;
         std::vector<uint8_t> outputData;
         int components;
@@ -248,14 +248,14 @@ static inline float JXLGetDistance(const int quality)
             case kR8:
                 pixelFormat = r8;
                 break;
-            case kFloat16:
-                pixelFormat = float16;
+            case kR16:
+                pixelFormat = r16;
                 break;
         }
         auto decoded = DecodeJpegXlOneShot(imageData.data(), imageData.size(),
                                            &outputData, &xSize, &ySize,
                                            &iccProfile, &depth, &components,
-                                           &useFloats, &jxlExposedOrientation,
+                                           &use16BitImage, &jxlExposedOrientation,
                                            pixelFormat);
         if (!decoded) {
             *error = [[NSError alloc] initWithDomain:@"JXLCoder" 
@@ -277,7 +277,7 @@ static inline float JXLGetDistance(const int quality)
         if (rescale.width > 0 && rescale.height > 0) {
             auto scaleResult = [RgbaScaler scaleData:outputData width:(int)xSize height:(int)ySize
                                             newWidth:(int)rescale.width newHeight:(int)rescale.height
-                                          components:components pixelFormat:useFloats ? kF16 : kU8];
+                                          components:components pixelFormat:use16BitImage ? kF16 : kU8];
             if (!scaleResult) {
                 *error = [[NSError alloc] initWithDomain:@"JXLCoder" 
                                                     code:500
@@ -309,11 +309,11 @@ static inline float JXLGetDistance(const int quality)
             }
         }
 
-        int stride = components*(int)xSize * (int)(useFloats ? sizeof(uint16_t) : sizeof(uint8_t));
+        int stride = components*(int)xSize * (int)(use16BitImage ? sizeof(uint16_t) : sizeof(uint8_t));
 
         int flags;
-        if (useFloats) {
-            flags = (int)kCGBitmapByteOrder16Host | (int)kCGBitmapFloatComponents;
+        if (use16BitImage) {
+            flags = (int)kCGBitmapByteOrder16Host;
             if (components == 4) {
                 flags |= (int)kCGImageAlphaLast;
             } else {
@@ -343,7 +343,7 @@ static inline float JXLGetDistance(const int quality)
             return nullptr;
         }
 
-        int bitsPerComponent = (useFloats ? sizeof(uint16_t) : sizeof(uint8_t)) * 8;
+        int bitsPerComponent = (use16BitImage ? sizeof(uint16_t) : sizeof(uint8_t)) * 8;
         int bitsPerPixel = bitsPerComponent*components;
 
         CGImageRef imageRef = CGImageCreate(xSize, ySize, bitsPerComponent,
