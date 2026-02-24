@@ -252,11 +252,15 @@ static inline float JXLGetDistance(const int quality)
                 pixelFormat = r16;
                 break;
         }
+        
+        JxlChannelsType channelType = JxlChannelsType::Rgb;
+        
         auto decoded = DecodeJpegXlOneShot(imageData.data(), imageData.size(),
                                            &outputData, &xSize, &ySize,
                                            &iccProfile, &depth, &components,
                                            &use16BitImage, &jxlExposedOrientation,
-                                           pixelFormat);
+                                           pixelFormat, &channelType);
+        
         if (!decoded) {
             *error = [[NSError alloc] initWithDomain:@"JXLCoder" 
                                                 code:500
@@ -313,18 +317,26 @@ static inline float JXLGetDistance(const int quality)
 
         int flags;
         if (use16BitImage) {
-            flags = (int)kCGBitmapByteOrder16Host;
-            if (components == 4) {
-                flags |= (int)kCGImageAlphaLast;
+            if (channelType == JxlChannelsType::Rgb) {
+                flags = (int)kCGBitmapByteOrder16Host;
+                if (components == 4) {
+                    flags |= (int)kCGImageAlphaLast;
+                } else {
+                    flags |= (int)kCGImageAlphaNone;
+                }
             } else {
-                flags |= (int)kCGImageAlphaNone;
+                flags = (int)kCGBitmapByteOrder16Host | (int)kCGImageAlphaNone;
             }
         } else {
-            flags = (int)kCGImageByteOrderDefault;
-            if (components == 4) {
-                flags |= (int)kCGImageAlphaLast;
-            } else {
-                flags |= (int)kCGImageAlphaNone;
+            if (channelType == JxlChannelsType::Rgb) {
+                flags = (int)kCGImageByteOrderDefault;
+                if (components == 4) {
+                    flags |= (int)kCGImageAlphaLast;
+                } else {
+                    flags |= (int)kCGImageAlphaNone;
+                }
+            } else if (channelType == JxlChannelsType::Cmyk) {
+                flags = (int)kCGBitmapByteOrder32Little;
             }
         }
 
