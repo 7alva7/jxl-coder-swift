@@ -34,6 +34,10 @@
 
 #include "JxlDefinitions.h"
 
+enum JxlChannelsType {
+    Rgb, Cmyk
+};
+
 bool DecodeJpegXlOneShot(const uint8_t *jxl, size_t size,
                          std::vector<uint8_t> *pixels, size_t *xsize,
                          size_t *ysize,
@@ -42,7 +46,8 @@ bool DecodeJpegXlOneShot(const uint8_t *jxl, size_t size,
                          int* components,
                          bool* useFloats,
                          JxlExposedOrientation* exposedOrientation,
-                         JxlDecodingPixelFormat pixelFormat);
+                         JxlDecodingPixelFormat pixelFormat,
+                         JxlChannelsType* channelType);
 bool DecodeBasicInfo(const uint8_t *jxl, size_t size, size_t *xsize, size_t *ysize);
 bool EncodeJxlOneshot(const std::vector<uint8_t> &pixels, const uint32_t xsize,
                       const uint32_t ysize, std::vector<uint8_t> *compressed,

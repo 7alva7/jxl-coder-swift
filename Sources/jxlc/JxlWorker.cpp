@@ -41,7 +41,8 @@ bool DecodeJpegXlOneShot(const uint8_t *jxl, size_t size,
                          int* components,
                          bool* useFloats,
                          JxlExposedOrientation* exposedOrientation,
-                         JxlDecodingPixelFormat pixelFormat) {
+                         JxlDecodingPixelFormat pixelFormat,
+                         JxlChannelsType *channelType) {
     // Multi-threaded parallel runner.
     auto runner = JxlResizableParallelRunnerMake(nullptr);
 
@@ -97,8 +98,43 @@ bool DecodeJpegXlOneShot(const uint8_t *jxl, size_t size,
             bitDepth = info.bits_per_sample;
             *depth = info.bits_per_sample;
             int baseComponents = info.num_color_channels;
-            if (info.num_extra_channels > 0) {
+            
+            if (info.num_extra_channels == 1) {
+                JxlExtraChannelInfo channelInfo = {};
+                memset(&channelInfo, 0, sizeof(JxlExtraChannelInfo));
+                if (JxlDecoderGetExtraChannelInfo(dec.get(), 0, &channelInfo) != JXL_DEC_SUCCESS) {
+                    return false;
+                }
+                if (channelInfo.type == JXL_CHANNEL_ALPHA) {
+                    *channelType = JxlChannelsType::Rgb;
+                } else if (channelInfo.type == JXL_CHANNEL_BLACK) {
+                    *channelType = JxlChannelsType::Cmyk;
+                } else {
+                    return false;
+                }
                 baseComponents = 4;
+            } else if (info.num_extra_channels == 2) {
+                JxlExtraChannelInfo channelInfo0 = {};
+                memset(&channelInfo0, 0, sizeof(JxlExtraChannelInfo));
+                if (JxlDecoderGetExtraChannelInfo(dec.get(), 0, &channelInfo0) != JXL_DEC_SUCCESS) {
+                    return false;
+                }
+                JxlExtraChannelInfo channelInfo1 = {};
+                memset(&channelInfo1, 1, sizeof(JxlExtraChannelInfo));
+                if (JxlDecoderGetExtraChannelInfo(dec.get(), 1, &channelInfo1) != JXL_DEC_SUCCESS) {
+                    return false;
+                }
+                
+                if (channelInfo0.type == JXL_CHANNEL_BLACK && channelInfo1.type == JXL_CHANNEL_ALPHA) {
+                    *channelType = JxlChannelsType::Cmyk;
+                }else {
+                    return false;
+                }
+                baseComponents = 4;
+            } else if (info.num_extra_channels > 2) {
+                return false;
+            } else {
+                *channelType = JxlChannelsType::Rgb;
             }
             *components = baseComponents;
             *exposedOrientation = static_cast<JxlExposedOrientation>(info.orientation);
